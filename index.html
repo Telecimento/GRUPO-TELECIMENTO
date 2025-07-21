@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telecimento - Opiniômetro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2d2d2d 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ocultar conteúdo principal durante carregamento */
+        body.loading .header,
+        body.loading .main-content {
+            visibility: hidden;
+            opacity: 0;
+        }
+
+        /* Tela de Carregamento */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2d2d2d 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-logo {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            letter-spacing: 2px;
+            animation: pulse 2s infinite;
+        }
+
+        .loading-logo .tele {
+            color: #ffffff;
+        }
+
+        .loading-logo .cimento {
+            color: #cccccc;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 215, 0, 0.3);
+            border-top: 4px solid #FFD700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 2rem;
+        }
+
+        .loading-text {
+            font-size: 1.2rem;
+            color: #cccccc;
+            animation: fadeInOut 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Vídeo de Fundo */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .video-background video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.3;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.8) 0%, rgba(26, 26, 26, 0.7) 50%, rgba(45, 45, 45, 0.8) 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #FFD700;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-text {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        .tele {
+            color: #ffffff;
+        }
+
+        .cimento {
+            color: #cccccc;
+        }
+
+        .admin-btn {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            min-height: 44px; /* Altura mínima para touch targets */
+            justify-content: center;
+            white-space: nowrap;
+        }
+
+        .admin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .admin-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 10px rgba(255, 215, 0, 0.2);
+        }
+
+        /* Seção de Posts */
+        .posts-section {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .posts-title {
+            text-align: center;
+            font-size: 2rem;
+            color: #FFD700;
+            margin-bottom: 3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .post-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 215, 0, 0.2);
+            border-radius: 20px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .post-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .post-card:hover::before {
+            left: 100%;
+        }
+
+        .post-card:hover {
+            border-color: #FFD700;
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(255, 215, 0, 0.3);
+        }
+
+        .post-image {
+            width: 100%;
+            height: 450px; /* Aumentado para 450px */
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 1.1rem;
+            border: 2px dashed rgba(255, 215, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .post-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 13px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 3rem 0;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #e0e0e0;
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+
+        .opiniometro-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #FFD700;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #cccccc;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Rating Options */
+        .rating-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .rating-option {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 215, 0, 0.2);
+            border-radius: 15px;
+            padding: 1.2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rating-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .rating-option:hover::before {
+            left: 100%;
+        }
+
+        .rating-option:hover {
+            border-color: #FFD700;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(255, 215, 0, 0.2);
+        }
+
+        .rating-option.selected {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-color: #FFD700;
+            color: #000;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(255, 215, 0, 0.4);
+        }
+
+        .rating-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .rating-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .rating-description {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        /* Sectors Section */
+        .sectors-section {
+            margin-top: 2rem;
+        }
+
+        .sectors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .sector-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 215, 0, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .sector-card.selected {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .sector-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .sector-checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: #FFD700;
+        }
+
+        .sector-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #FFD700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sector-ratings {
+            display: none;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .sector-rating {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .sector-rating:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: #FFD700;
+        }
+
+        .sector-rating.selected {
+            background: #FFD700;
+            color: #000;
+            border-color: #FFD700;
+            font-weight: 600;
+        }
+
+        /* Feedback Section */
+        .feedback-section {
+            margin-top: 2rem;
+        }
+
+        .feedback-textarea {
+            width: 100%;
+            min-height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        .feedback-textarea:focus {
+            outline: none;
+            border-color: #FFD700;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+        }
+
+        .feedback-textarea::placeholder {
+            color: #888;
+        }
+
+        /* Submit Section */
+        .submit-section {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            border: none;
+            padding: 1rem 3rem;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Timer Section */
+        .voting-timer {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: #000;
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+
+        .timer-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .timer-display {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Contact Section */
+        .contact-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .contact-title {
+            color: #FFD700;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #cccccc;
+        }
+
+        .contact-item a {
+            color: #FFD700;
+            text-decoration: none;
+        }
+
+        .contact-item a:hover {
+            text-decoration: underline;
+        }
+
+        /* Video Section */
+        .video-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem 0;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .video-title {
+            color: #FFD700;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .video-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+            height: 500px; /* Aumentado de 450px para 500px */
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Preenche todo o container mantendo proporção */
+            border-radius: 15px;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .voting-blocked {
+            pointer-events: none;
+        }
+
+        .voting-blocked .opiniometro-section {
+            opacity: 0.6;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .logo-text {
+                font-size: 1.8rem;
+            }
+
+            .admin-btn {
+                padding: 14px 28px;
+                font-size: 1rem;
+                min-height: 48px;
+                width: auto;
+                min-width: 160px;
+            }
+
+            .loading-logo {
+                font-size: 2.5rem;
+            }
+
+            .container {
+                padding: 0 15px;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .section-subtitle {
+                font-size: 0.95rem;
+            }
+
+            .posts-title {
+                font-size: 1.6rem;
+            }
+
+            .video-title {
+                font-size: 1.6rem;
+            }
+
+            .posts-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .post-card {
+                padding: 1.5rem;
+            }
+
+            .post-image {
+                height: 350px;
+            }
+
+            .rating-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+                max-width: 100%;
+            }
+
+            .rating-option {
+                padding: 1rem;
+            }
+
+            .rating-emoji {
+                font-size: 2rem;
+            }
+
+            .rating-title {
+                font-size: 0.95rem;
+            }
+
+            .rating-description {
+                font-size: 0.75rem;
+            }
+
+            .sectors-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .sector-title {
+                font-size: 1rem;
+            }
+
+            .timer-display {
+                font-size: 2rem;
+            }
+
+            .contact-title {
+                font-size: 1.3rem;
+            }
+
+            .contact-info {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .video-container {
+                height: 400px; /* Aumentado de 350px para 400px */
+            }
+
+            .submit-btn {
+                font-size: 1rem;
+                padding: 0.8rem 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-text {
+                font-size: 1.5rem;
+            }
+
+            .admin-btn {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+                min-height: 44px;
+                min-width: 140px;
+                gap: 6px;
+            }
+
+            .admin-btn i {
+                font-size: 0.9rem;
+            }
+
+            .loading-logo {
+                font-size: 2rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .section-subtitle {
+                font-size: 0.85rem;
+            }
+
+            .posts-title {
+                font-size: 1.4rem;
+            }
+
+            .video-title {
+                font-size: 1.4rem;
+            }
+
+            .posts-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .post-card {
+                padding: 1rem;
+            }
+
+            .post-image {
+                height: 250px;
+            }
+
+            .rating-grid {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+
+            .rating-option {
+                padding: 1rem;
+            }
+
+            .rating-emoji {
+                font-size: 1.8rem;
+            }
+
+            .rating-title {
+                font-size: 0.9rem;
+            }
+
+            .rating-description {
+                font-size: 0.7rem;
+            }
+
+            .sector-title {
+                font-size: 0.9rem;
+            }
+
+            .sector-rating {
+                font-size: 0.8rem;
+                padding: 0.6rem;
+            }
+
+            .sector-ratings {
+                grid-template-columns: 1fr;
+            }
+
+            .video-container {
+                height: 300px; /* Aumentado de 250px para 300px */
+            }
+
+            .submit-btn {
+                font-size: 0.9rem;
+                padding: 0.7rem 1.5rem;
+                min-width: 150px;
+            }
+
+            .contact-title {
+                font-size: 1.1rem;
+            }
+
+            .contact-item {
+                font-size: 0.85rem;
+            }
+
+            .feedback-textarea {
+                font-size: 0.9rem;
+                min-height: 100px;
+            }
+
+            .timer-display {
+                font-size: 1.5rem;
+            }
+
+            .loading-text {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Tela de Carregamento -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">
+            <span class="tele">Tele</span><span class="cimento">CIMENTO</span>
+        </div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Carregando sistema de avaliação...</div>
+    </div>
+
+    <!-- Vídeo de Fundo -->
+    <div class="video-background">
+        <!-- Substitua o src pelo caminho do seu vídeo -->
+        <video autoplay muted loop>
+            <source src="telecimento.mp4" type="video/mp4">
+            <!-- Vídeo de fallback ou imagem -->
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo-text">
+                    <span class="tele">Tele</span><span class="cimento">CIMENTO</span>
+                </h1>
+                <button class="admin-btn" id="adminBtn">
+                    <i class="fas fa-cog"></i>
+                    Administrador
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+
+
+            <div class="opiniometro-section">
+                <h2 class="section-title">Avalie o nosso atendimento</h2>
+                <p class="section-subtitle">Como você avalia nosso atendimento hoje? Sua opinião é muito importante para nós!</p>
+                
+                <div class="rating-grid">
+                    <div class="rating-option" data-rating="Ruim">
+                        <span class="rating-emoji">😞</span>
+                        <div class="rating-title">RUIM</div>
+                        <div class="rating-description">Não atendeu expectativas</div>
+                    </div>
+                    <div class="rating-option" data-rating="Regular">
+                        <span class="rating-emoji">😐</span>
+                        <div class="rating-title">REGULAR</div>
+                        <div class="rating-description">Atendimento básico</div>
+                    </div>
+                    <div class="rating-option" data-rating="Bom">
+                        <span class="rating-emoji">😊</span>
+                        <div class="rating-title">BOM</div>
+                        <div class="rating-description">Atendimento satisfatório</div>
+                    </div>
+                    <div class="rating-option" data-rating="Excelente">
+                        <span class="rating-emoji">🤩</span>
+                        <div class="rating-title">EXCELENTE</div>
+                        <div class="rating-description">Superou expectativas</div>
+                    </div>
+                </div>
+
+                <div class="sectors-section">
+                    <h2 class="section-title">Escolha os setores que deseja avaliar</h2>
+                    <p class="section-subtitle">Selecione um ou mais setores para avaliar (múltipla escolha)</p>
+                    
+                    <div class="sectors-grid">
+                        <div class="sector-card">
+                            <div class="sector-header">
+                                <input type="checkbox" class="sector-checkbox" data-sector="Vendas">
+                                <div class="sector-title">
+                                    🛒 VENDAS
+                                </div>
+                            </div>
+                            <div class="sector-ratings" style="display: grid;">
+                                <div class="sector-rating" data-sector="Vendas" data-value="Ruim">Ruim</div>
+                                <div class="sector-rating" data-sector="Vendas" data-value="Regular">Regular</div>
+                                <div class="sector-rating" data-sector="Vendas" data-value="Bom">Bom</div>
+                                <div class="sector-rating" data-sector="Vendas" data-value="Excelente">Excelente</div>
+                            </div>
+                        </div>
+
+                        <div class="sector-card">
+                            <div class="sector-header">
+                                <input type="checkbox" class="sector-checkbox" data-sector="Caixa">
+                                <div class="sector-title">
+                                    💰 CAIXA
+                                </div>
+                            </div>
+                            <div class="sector-ratings" style="display: grid;">
+                                <div class="sector-rating" data-sector="Caixa" data-value="Ruim">Ruim</div>
+                                <div class="sector-rating" data-sector="Caixa" data-value="Regular">Regular</div>
+                                <div class="sector-rating" data-sector="Caixa" data-value="Bom">Bom</div>
+                                <div class="sector-rating" data-sector="Caixa" data-value="Excelente">Excelente</div>
+                            </div>
+                        </div>
+
+                        <div class="sector-card">
+                            <div class="sector-header">
+                                <input type="checkbox" class="sector-checkbox" data-sector="Expedição">
+                                <div class="sector-title">
+                                    📦 EXPEDIÇÃO
+                                </div>
+                            </div>
+                            <div class="sector-ratings" style="display: grid;">
+                                <div class="sector-rating" data-sector="Expedição" data-value="Ruim">Ruim</div>
+                                <div class="sector-rating" data-sector="Expedição" data-value="Regular">Regular</div>
+                                <div class="sector-rating" data-sector="Expedição" data-value="Bom">Bom</div>
+                                <div class="sector-rating" data-sector="Expedição" data-value="Excelente">Excelente</div>
+                            </div>
+                        </div>
+
+                        <div class="sector-card">
+                            <div class="sector-header">
+                                <input type="checkbox" class="sector-checkbox" data-sector="Logística">
+                                <div class="sector-title">
+                                    🚛 LOGÍSTICA
+                                </div>
+                            </div>
+                            <div class="sector-ratings" style="display: grid;">
+                                <div class="sector-rating" data-sector="Logística" data-value="Ruim">Ruim</div>
+                                <div class="sector-rating" data-sector="Logística" data-value="Regular">Regular</div>
+                                <div class="sector-rating" data-sector="Logística" data-value="Bom">Bom</div>
+                                <div class="sector-rating" data-sector="Logística" data-value="Excelente">Excelente</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feedback-section">
+                    <h2 class="section-title"></h2>
+                    <p class="section-subtitle">(Opcional) Relate melhorias ou situações que gostaria de compartilhar</p>
+                    
+                    <textarea 
+                        id="feedback" 
+                        class="feedback-textarea" 
+                        placeholder="Descreva sua experiência ou relate alguma situação específica..."
+                        maxlength="500"
+                    ></textarea>
+                </div>
+
+                <div class="submit-section">
+                    <button class="submit-btn" id="submitBtn" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                        Enviar Avaliação
+                    </button>
+                </div>
+            </div>
+
+            <!-- Seção de Posts -->
+            <div class="posts-section">
+                <h2 class="posts-title">
+                    <i class="fas fa-images"></i>
+                    Nossos Posts
+                </h2>
+                <div class="posts-grid">
+                    <div class="post-card">
+                        <div class="post-image">
+                            <!-- Substitua "post1.jpg" pelo caminho da sua imagem -->
+                            <img src="cimento.jpg" alt="Post 1">
+                        </div>
+                    </div>
+
+                    <div class="post-card">
+                        <div class="post-image">
+                            <!-- Substitua "post2.jpg" pelo caminho da sua imagem -->
+                            <img src="cimento 2.jpg" alt="Post 2">
+                        </div>
+                    </div>
+
+                    <div class="post-card">
+                        <div class="post-image">
+                            <!-- Substitua "post3.jpg" pelo caminho da sua imagem -->
+                            <img src="cimento 3.jpg" alt="Post 3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Vídeo sobre Telecimento -->
+            <div class="video-section">
+                <h2 class="video-title">
+                    <i class="fas fa-play-circle"></i>
+                 Telecimento
+                </h2>
+                <div class="video-container">
+                    <!-- Substitua "meuvideo.mp4" pelo caminho do seu vídeo -->
+                    <video autoplay muted loop>
+                        <source src="telecimento.mp4" type="video/mp4">
+                        <source src="meuvideo.webm" type="video/webm">
+                        <source src="meuvideo.ogg" type="video/ogg">
+                        Seu navegador não suporta o elemento de vídeo.
+                    </video>
+                </div>
+            </div>
+
+            <div class="contact-section">
+                <h3 class="contact-title">Entre em contato conosco</h3>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fab fa-instagram"></i>
+                        <a href="https://www.instagram.com/grupotelecimento" target="_blank">@grupotelecimento</a>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fab fa-whatsapp"></i>
+                        <a href="https://wa.me/5538932121823" target="_blank">(38) 9 3212-1823</a>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Av. Manoel Caribe Filho, 3325 - Canelas, Montes Claros</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+// Sistema de Opiniômetro TeleCIMENTO v4.0 - Versão Aprimorada
+class OpiniometroAdvanced {
+    constructor() {
+        this.dispositivoId = this.getDispositivoId();
+        this.avaliacaoGeral = null;
+        this.setoresSelecionados = new Set();
+        this.avaliacoesSetores = {};
+        this.adminPassword = '@TELEcimento2025';
+        this.apiUrl = 'http://localhost:5000/api'; // URL do backend Flask
+        
+        this.init();
+    }
+
+    init() {
+        // Adicionar classe loading ao body
+        document.body.classList.add('loading');
+        
+        // Simular carregamento
+        this.showLoadingScreen();
+        
+        setTimeout(() => {
+            this.hideLoadingScreen();
+            this.setupEventListeners();
+            this.checkVotingStatus();
+            this.updateTimer();
+            setInterval(() => this.updateTimer(), 1000);
+            
+            // Remover classe loading e mostrar conteúdo
+            document.body.classList.remove('loading');
+        }, 3000); // 3 segundos de carregamento
+    }
+
+    showLoadingScreen() {
+        const loadingScreen = document.getElementById('loadingScreen');
+        if (loadingScreen) {
+            loadingScreen.classList.remove('hidden');
+        }
+    }
+
+    hideLoadingScreen() {
+        const loadingScreen = document.getElementById('loadingScreen');
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+        }
+    }
+
+    getDispositivoId() {
+        let id = localStorage.getItem('telecimento_device_id');
+        if (!id) {
+            id = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('telecimento_device_id', id);
+        }
+        return id;
+    }
+
+    async checkVotingStatus() {
+        try {
+            // Verificar no localStorage primeiro
+            const lastVote = localStorage.getItem('telecimento_last_vote');
+            if (lastVote) {
+                const lastVoteDate = new Date(lastVote);
+                const today = this.getBrazilTime();
+                today.setHours(0, 0, 0, 0);
+                
+                if (lastVoteDate >= today) {
+                    this.showVotingBlocked();
+                    return;
+                }
+            }
+
+            // Verificar no backend se disponível
+            try {
+                const response = await fetch(`${this.apiUrl}/check-vote/${this.dispositivoId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.hasVotedToday) {
+                        this.showVotingBlocked();
+                    }
+                }
+            } catch (error) {
+                console.log('Backend não disponível, usando localStorage');
+            }
+        } catch (error) {
+            console.error('Erro ao verificar status de votação:', error);
+        }
+    }
+
+    setupEventListeners() {
+        // Avaliação geral
+        document.querySelectorAll('.rating-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                if (e.target.closest('.voting-blocked')) return;
+                
+                document.querySelectorAll('.rating-option').forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                this.avaliacaoGeral = option.dataset.rating;
+                this.updateSubmitButton();
+            });
+        });
+
+        // Seleção de setores
+        document.querySelectorAll('.sector-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                if (e.target.closest('.voting-blocked')) return;
+                
+                const sector = e.target.dataset.sector;
+                const sectorCard = e.target.closest('.sector-card');
+                
+                if (e.target.checked) {
+                    this.setoresSelecionados.add(sector);
+                    sectorCard.classList.add('selected');
+                    this.showSectorRating(sector);
+                } else {
+                    this.setoresSelecionados.delete(sector);
+                    sectorCard.classList.remove('selected');
+                    this.hideSectorRating(sector);
+                    delete this.avaliacoesSetores[sector];
+                }
+                this.updateSubmitButton();
+            });
+        });
+
+        // Avaliações por setor
+        document.querySelectorAll('.sector-rating').forEach(rating => {
+            rating.addEventListener('click', (e) => {
+                if (e.target.closest('.voting-blocked')) return;
+                
+                const sector = rating.dataset.sector;
+                const value = rating.dataset.value;
+                
+                // Remover seleção anterior do setor
+                document.querySelectorAll(`[data-sector="${sector}"].sector-rating`).forEach(r => {
+                    r.classList.remove('selected');
+                });
+                
+                // Adicionar nova seleção
+                rating.classList.add('selected');
+                this.avaliacoesSetores[sector] = value;
+                this.updateSubmitButton();
+            });
+        });
+
+        // Botão de envio
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            this.submitEvaluation();
+        });
+
+        // Botão admin
+        document.getElementById('adminBtn').addEventListener('click', () => {
+            window.location.href = 'admin.html';
+        });
+    }
+
+    showSectorRating(sector) {
+        const sectorCard = document.querySelector(`[data-sector="${sector}"]`).closest('.sector-card');
+        const ratingDiv = sectorCard.querySelector('.sector-ratings');
+        if (ratingDiv) {
+            ratingDiv.style.display = 'grid';
+        }
+    }
+
+    hideSectorRating(sector) {
+        const sectorCard = document.querySelector(`[data-sector="${sector}"]`).closest('.sector-card');
+        const ratingDiv = sectorCard.querySelector('.sector-ratings');
+        if (ratingDiv) {
+            ratingDiv.style.display = 'none';
+        }
+    }
+
+    updateSubmitButton() {
+        const submitBtn = document.getElementById('submitBtn');
+        const isValid = this.avaliacaoGeral && 
+                       (this.setoresSelecionados.size === 0 || 
+                        this.setoresSelecionados.size === Object.keys(this.avaliacoesSetores).length);
+        
+        submitBtn.disabled = !isValid;
+        submitBtn.style.opacity = isValid ? '1' : '0.5';
+    }
+
+    async submitEvaluation() {
+        const feedback = document.getElementById('feedback').value.trim();
+        
+        const evaluationData = {
+            id: Date.now().toString(),
+            dispositivoId: this.dispositivoId,
+            timestamp: new Date().toISOString(),
+            avaliacaoGeral: this.avaliacaoGeral,
+            setores: this.avaliacoesSetores,
+            feedback: feedback
+        };
+
+        try {
+            // Tentar enviar para o backend primeiro
+            try {
+                const response = await fetch(`${this.apiUrl}/submit-evaluation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(evaluationData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Avaliação enviada para o backend:', result);
+                }
+            } catch (error) {
+                console.log('Backend não disponível, salvando localmente');
+            }
+
+            // Salvar no localStorage como backup
+            this.saveEvaluation(evaluationData);
+            
+            // Marcar como votado hoje
+            localStorage.setItem('telecimento_last_vote', new Date().toISOString());
+            
+            this.showSuccessMessage();
+            this.showVotingBlocked();
+            this.resetForm();
+        } catch (error) {
+            console.error('Erro ao enviar avaliação:', error);
+            this.showErrorMessage('Erro ao enviar avaliação. Tente novamente.');
+        }
+    }
+
+    saveEvaluation(evaluation) {
+        let evaluations = JSON.parse(localStorage.getItem('telecimento_evaluations') || '[]');
+        evaluations.push(evaluation);
+        localStorage.setItem('telecimento_evaluations', JSON.stringify(evaluations));
+    }
+
+    showSuccessMessage() {
+        this.showNotification('Obrigado pela sua avaliação! Sua opinião é muito importante para nós.', 'success');
+    }
+
+    showErrorMessage(message) {
+        this.showNotification(message, 'error');
+    }
+
+    showNotification(message, type) {
+        // Remover notificação existente
+        const existingNotification = document.querySelector('.notification');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+
+        // Criar nova notificação
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+            <span>${message}</span>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Remover após 5 segundos
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    showVotingBlocked() {
+        const container = document.querySelector('.container');
+        container.classList.add('voting-blocked');
+
+        // Criar ou atualizar o timer
+        let timerDiv = document.getElementById('voting-timer');
+        if (!timerDiv) {
+            timerDiv = document.createElement('div');
+            timerDiv.id = 'voting-timer';
+            timerDiv.className = 'voting-timer';
+            const mainContent = document.querySelector('.main-content .container');
+            const firstChild = mainContent.querySelector('.promotions-section') || mainContent.firstChild;
+            mainContent.insertBefore(timerDiv, firstChild);
+        }
+
+        this.updateTimer();
+
+        // Desabilitar todos os controles
+        document.querySelectorAll('.rating-option, .sector-checkbox, .sector-rating, #submitBtn').forEach(el => {
+            el.disabled = true;
+            el.style.pointerEvents = 'none';
+            el.style.opacity = '0.5';
+        });
+
+        document.getElementById('submitBtn').textContent = 'Aguarde para votar novamente';
+    }
+
+    updateTimer() {
+        const timerDiv = document.getElementById('voting-timer');
+        if (!timerDiv) return;
+
+        const agora = this.getBrazilTime();
+        const proximoReset = new Date(agora);
+        proximoReset.setDate(proximoReset.getDate() + 1);
+        proximoReset.setHours(0, 0, 0, 0);
+
+        const diferenca = proximoReset.getTime() - agora.getTime();
+
+        if (diferenca <= 0) {
+            // Timer expirou, recarregar página
+            location.reload();
+            return;
+        }
+
+        const horas = Math.floor(diferenca / (1000 * 60 * 60));
+        const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
+        const segundos = Math.floor((diferenca % (1000 * 60)) / 1000);
+
+        const timeString = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+
+        timerDiv.innerHTML = `
+            <div class="timer-content">
+                <h3><i class="fas fa-clock"></i> Você já avaliou hoje!</h3>
+                <div class="timer-display">${timeString}</div>
+                <p>Tempo restante para avaliar novamente (reset às 00:00 - Horário de Brasília)</p>
+            </div>
+        `;
+    }
+
+    resetForm() {
+        this.avaliacaoGeral = null;
+        this.setoresSelecionados.clear();
+        this.avaliacoesSetores = {};
+
+        document.querySelectorAll('.rating-option').forEach(opt => opt.classList.remove('selected'));
+        document.querySelectorAll('.sector-checkbox').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.sector-card').forEach(card => card.classList.remove('selected'));
+        document.querySelectorAll('.sector-ratings').forEach(rating => rating.style.display = 'none');
+        document.querySelectorAll('.sector-rating').forEach(rating => rating.classList.remove('selected'));
+        document.getElementById('feedback').value = '';
+        
+        this.updateSubmitButton();
+    }
+
+    getBrazilTime() {
+        const utc = new Date().getTime() + (new Date().getTimezoneOffset() * 60000);
+        const brazilTime = new Date(utc + (-3 * 3600000)); // UTC-3 para Brasília
+        return brazilTime;
+    }
+}
+
+// Inicializar quando a página carregar
+document.addEventListener('DOMContentLoaded', () => {
+    new OpiniometroAdvanced();
+});
+</script>
+</body>
+</html>
+
+

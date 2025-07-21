@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Telecimento</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Barra de Progresso */
+        .progress-bar-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 9999;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .progress-bar.loading {
+            animation: progressPulse 1.5s infinite;
+        }
+
+        @keyframes progressPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+        }
+
+        /* Vídeo de Fundo */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .video-background video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.2;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(45, 45, 45, 0.8) 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #FFD700;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-text {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        .tele {
+            color: #ffffff;
+        }
+
+        .cimento {
+            color: #cccccc;
+        }
+
+        .admin-indicator {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Login Form */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 80px);
+            padding: 2rem;
+        }
+
+        .login-form {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .login-title {
+            color: #FFD700;
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #FFD700;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+        }
+
+        .login-input::placeholder {
+            color: #888;
+        }
+
+        .login-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .login-btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-height: 48px;
+            justify-content: center;
+            text-decoration: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .login-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-btn:not(:disabled):active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .login-btn.primary {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+        }
+
+        .login-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            display: none;
+            padding: 2rem 0;
+        }
+
+        .panel-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #FFD700;
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .control-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-title {
+            color: #FFD700;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .control-description {
+            color: #cccccc;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .next-reset {
+            font-size: 1.8rem;
+            color: #FFD700;
+            font-weight: 700;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 180px;
+            justify-content: center;
+        }
+
+        .control-btn.reset {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .control-btn.refresh {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Statistics Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: #FFD700;
+            transform: translateY(-3px);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #FFD700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #cccccc;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Sections Grid */
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .section-card-title {
+            color: #FFD700;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-content {
+            color: #cccccc;
+        }
+
+        .section-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-item:last-child {
+            border-bottom: none;
+        }
+
+        .section-item-label {
+            color: #cccccc;
+        }
+
+        .section-item-value {
+            color: #FFD700;
+            font-weight: 600;
+        }
+
+        /* Sector Stats */
+        .sector-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .sector-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .sector-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .sector-title {
+            color: #FFD700;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .sector-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sector-metric:last-child {
+            border-bottom: none;
+        }
+
+        .sector-metric-label {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .sector-metric-value {
+            color: #FFD700;
+            font-weight: 600;
+        }
+
+        /* Opinions Section */
+        .opinions-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .opinions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .opinions-title {
+            color: #FFD700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #cccccc;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: #FFD700;
+            color: #000;
+            border-color: #FFD700;
+        }
+
+        .opinions-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .opinion-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .opinion-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .opinion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .opinion-rating {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .opinion-rating.excelente {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .opinion-rating.bom {
+            background: #2196F3;
+            color: white;
+        }
+
+        .opinion-rating.regular {
+            background: #FF9800;
+            color: white;
+        }
+
+        .opinion-rating.ruim {
+            background: #f44336;
+            color: white;
+        }
+
+        .opinion-sentiment {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .opinion-sentiment.positivo {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+
+        .opinion-sentiment.negativo {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+
+        .opinion-sentiment.neutro {
+            background: rgba(158, 158, 158, 0.2);
+            color: #9e9e9e;
+            border: 1px solid #9e9e9e;
+        }
+
+        .opinion-date {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .opinion-content {
+            color: #cccccc;
+            font-style: italic;
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .opinion-sectors {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .sector-tag {
+            background: rgba(255, 215, 0, 0.1);
+            color: #FFD700;
+            padding: 0.25rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Scrollbar */
+        .opinions-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .opinions-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .opinions-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 215, 0, 0.5);
+            border-radius: 3px;
+        }
+
+        .opinions-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 215, 0, 0.7);
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .logo-text {
+                font-size: 1.5rem;
+            }
+
+            .loading-logo {
+                font-size: 3rem;
+            }
+
+            .admin-panel {
+                padding: 1rem 0;
+            }
+
+            .panel-title {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .sections-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .sector-stats {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .control-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .control-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .opinions-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-buttons {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 2rem;
+            }
+
+            .login-form {
+                padding: 2rem 1.5rem;
+            }
+
+            .login-buttons {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+
+            .login-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 1.2rem 2rem;
+                font-size: 1rem;
+                min-height: 52px;
+            }
+
+            .login-input {
+                padding: 1.2rem;
+                font-size: 1rem;
+                min-height: 52px;
+            }
+
+            .login-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra de Progresso -->
+    <div class="progress-bar-container" id="progressBarContainer">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Vídeo de Fundo -->
+    <div class="video-background">
+        <!-- Substitua o src pelo caminho do seu vídeo -->
+        <video autoplay muted loop>
+            <source src="background-video.mp4" type="video/mp4">
+            <!-- Vídeo de fallback ou imagem -->
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo-text">
+                    <span class="tele">Tele</span><span class="cimento">CIMENTO</span>
+                </h1>
+                <div class="admin-indicator">
+                    <i class="fas fa-shield-alt"></i>
+                    Painel Administrativo
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Login Form -->
+    <div id="loginForm" class="login-container">
+        <div class="login-form">
+            <h2 class="login-title">
+                <i class="fas fa-lock"></i>
+                Acesso Administrativo
+            </h2>
+            <input 
+                type="password" 
+                id="passwordInput" 
+                class="login-input" 
+                placeholder="Digite a senha"
+                autocomplete="current-password"
+            >
+            <div class="login-buttons">
+                <button class="login-btn primary" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Entrar
+                </button>
+                <button class="login-btn secondary" id="cancelBtn">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-panel">
+        <div class="container">
+            <h1 class="panel-title">Painel Administrativo</h1>
+
+            <!-- Control Section -->
+            <div class="control-section">
+                <h2 class="control-title">
+                    <i class="fas fa-clock"></i>
+                    Controle de Votação Diária
+                </h2>
+                <p class="control-description">
+                    O sistema permite apenas um voto por dispositivo por dia. O reset automático ocorre às 00:00 (horário de Brasília). Use o botão abaixo para resetar manualmente e permitir que todos os dispositivos votem novamente.
+                </p>
+                <div class="next-reset">
+                    Próximo reset automático: <span id="nextReset">--:--:-- (Horário de Brasília)</span>
+                </div>
+                <div class="control-buttons">
+                    <button class="control-btn reset" id="resetBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        Resetar Timer de Votação
+                    </button>
+                    <button class="control-btn refresh" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        Atualizar Dados
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalVotes">0</div>
+                    <div class="stat-label">Total de Votos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="todayVotes">0</div>
+                    <div class="stat-label">Votos Hoje</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="averageRating">0</div>
+                    <div class="stat-label">Média Geral</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="satisfactionRate">0%</div>
+                    <div class="stat-label">Taxa de Satisfação</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="feedbackCount">0</div>
+                    <div class="stat-label">Feedbacks Recebidos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="averageTime">3</div>
+                    <div class="stat-label">Tempo Médio (min)</div>
+                </div>
+            </div>
+
+            <!-- Sections Grid -->
+            <div class="sections-grid">
+                <!-- General Summary -->
+                <div class="section-card">
+                    <h3 class="section-card-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Resumo Geral
+                    </h3>
+                    <div class="section-content">
+                        <div class="section-item">
+                            <span class="section-item-label">Avaliações Positivas:</span>
+                            <span class="section-item-value" id="positiveRate">0%</span>
+                        </div>
+                        <div class="section-item">
+                            <span class="section-item-label">Avaliações Negativas:</span>
+                            <span class="section-item-value" id="negativeRate">0%</span>
+                        </div>
+                        <div class="section-item">
+                            <span class="section-item-label">Melhor Setor:</span>
+                            <span class="section-item-value" id="bestSector">N/A</span>
+                        </div>
+                        <div class="section-item">
+                            <span class="section-item-label">Setor a Melhorar:</span>
+                            <span class="section-item-value" id="worstSector">N/A</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Temporal Analysis -->
+                <div class="section-card">
+                    <h3 class="section-card-title">
+                        <i class="fas fa-clock"></i>
+                        Análise Temporal
+                    </h3>
+                    <div class="section-content">
+                        <div class="section-item">
+                            <span class="section-item-label">Pico de Avaliações:</span>
+                            <span class="section-item-value" id="peakTime">14:00h</span>
+                        </div>
+                        <div class="section-item">
+                            <span class="section-item-label">Tendência Semanal:</span>
+                            <span class="section-item-value" id="weeklyTrend">Estável</span>
+                        </div>
+                        <div class="section-item">
+                            <span class="section-item-label">Crescimento Mensal:</span>
+                            <span class="section-item-value" id="monthlyGrowth">+5%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sector Statistics -->
+            <div class="sector-stats">
+                <div class="sector-card" data-sector="vendas">
+                    <div class="sector-header">
+                        <span>🛒</span>
+                        <h3 class="sector-title">Setor de Vendas</h3>
+                    </div>
+                    <div class="sector-metric">
+                        <span class="sector-metric-label">Média de Avaliação:</span>
+                        <span class="sector-metric-value sector-average">0</span>
+                    </div>
+                    <div class="sector-metric">
+                        <span class="sector-metric-label">Total de Avaliações:</span>
+                        <span class="sector-metric-value sector-total">0</span>
+                    </div>
+                    <div class="sector-metric">
+                        <span class="sector-metric-label">Satisfação:</span>
+                        <span class="sector-metric-value sector-satisfaction">0%</span>
+                    </div>
+                </div>
+
+                <div class="sector-card" data-sector="caixa">
+                    <div class="sector-header">
+                        <span>💰</span>
+                        <h3 class="sector-title">Caixa</h3>
+                    </div>
+                    <div class="sector-metric">
+                        <span class="sector-metric-label">Média de Avaliação:</span>
+                        <span class="sector-metric-value sector-average">0</span>
+                    </div>
+                    <div class="sector-metric">
+                        <span class="sector-metric-label">Total de Avaliações:</span>
+                        <span class="sector-metric-value sector-total">0</span>
+                    </div>
+                    <div class="sector-metric">
+                        <span class="sector-metric-label">Satisfação:</span>
+                        <span class="sector-metric-value sector-satisfaction">0%</span>
+                    </div>
+                </div>
+
+                <div class="sector-card" data-sector="expedição">
+                    <div class="sector-header">
+                        <span>📦</span>
+                        <h3 class="sector-title">Setor de Expedição</h3>
+                    </div>
+                    <div class="sector-metric">
+                        <span class="sector-metric-label">Média de Avaliação:</span>
+                        <span class="sector-metric-value sector-average">0</span>
+                    </div>
+                    <div class="sector-metric">
+                        <span class="sector-metric-label">Total de Avaliações:</span>
+                        <span class="sector-metric-value sector-total">0</span>
+                    </div>
+                    <div class="sector-metric">
+                        <span class="sector-metric-label">Satisfação:</span>
+                        <span class="sector-metric-value sector-satisfaction">0%</span>
+                    </div>
+                </div>
+
+                <div class="sector-card" data-sector="logística">
+                    <div class="sector-header">
+                        <span>🚛</span>
+                        <h3 class="sector-title">Setor de Logística</h3>
+                    </div>
+                    <div class="sector-metric">
+                        <span class="sector-metric-label">Média de Avaliação:</span>
+                        <span class="sector-metric-value sector-average">0</span>
+                    </div>
+                    <div class="sector-metric">
+                        <span class="sector-metric-label">Total de Avaliações:</span>
+                        <span class="sector-metric-value sector-total">0</span>
+                    </div>
+                    <div class="sector-metric">
+                        <span class="sector-metric-label">Satisfação:</span>
+                        <span class="sector-metric-value sector-satisfaction">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Opinions Section -->
+            <div class="opinions-section">
+                <div class="opinions-header">
+                    <h3 class="opinions-title">
+                        <i class="fas fa-comments"></i>
+                        Opiniões dos Clientes
+                    </h3>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="todas">Todas 0</button>
+                        <button class="filter-btn" data-filter="positivas">Positivas 0</button>
+                        <button class="filter-btn" data-filter="negativas">Negativas 0</button>
+                        <button class="filter-btn" data-filter="sugestoes">Sugestões 0</button>
+                    </div>
+                </div>
+                <div class="opinions-container" id="opinionsContainer">
+                    <!-- Opiniões serão carregadas aqui via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// Admin Panel JavaScript - Versão Aprimorada
+class AdminPanelAdvanced {
+    constructor() {
+        this.adminPassword = '@TELEcimento2025';
+        this.isAuthenticated = false;
+        this.dados = null;
+        this.apiUrl = 'http://localhost:5000/api'; // URL do backend Flask
+        
+        this.init();
+    }
+
+    init() {
+        // Mostrar barra de progresso
+        this.showProgressBar();
+        
+        // Simular carregamento com progresso
+        this.simulateLoading(() => {
+            this.hideProgressBar();
+            this.setupEventListeners();
+            this.checkAuthentication();
+        });
+    }
+
+    showProgressBar() {
+        const container = document.getElementById('progressBarContainer');
+        const bar = document.getElementById('progressBar');
+        if (container && bar) {
+            container.style.display = 'block';
+            bar.classList.add('loading');
+        }
+    }
+
+    hideProgressBar() {
+        const container = document.getElementById('progressBarContainer');
+        const bar = document.getElementById('progressBar');
+        if (container && bar) {
+            bar.style.width = '100%';
+            setTimeout(() => {
+                container.style.display = 'none';
+                bar.style.width = '0%';
+                bar.classList.remove('loading');
+            }, 500);
+        }
+    }
+
+    simulateLoading(callback) {
+        const bar = document.getElementById('progressBar');
+        if (!bar) {
+            callback();
+            return;
+        }
+
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+                setTimeout(callback, 300);
+            }
+            bar.style.width = progress + '%';
+        }, 100);
+    }
+
+    setupEventListeners() {
+        // Login
+        const loginBtn = document.getElementById('loginBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const passwordInput = document.getElementById('passwordInput');
+
+        if (loginBtn) {
+            loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.authenticate();
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = 'index.html';
+            });
+        }
+
+        // Enter key no campo de senha
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.authenticate();
+                }
+            });
+
+            // Focus automático no campo de senha
+            passwordInput.focus();
+        }
+
+        // Reset manual
+        const resetBtn = document.getElementById('resetBtn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.resetTimer();
+            });
+        }
+
+        // Atualizar dados
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.loadData();
+            });
+        }
+
+        // Filtros de opinião
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.filterOpinions(e.target.dataset.filter);
+            });
+        });
+    }
+
+    checkAuthentication() {
+        const isAuth = sessionStorage.getItem('telecimento_admin_auth');
+        if (isAuth === 'true') {
+            this.isAuthenticated = true;
+            this.showAdminPanel();
+            this.loadData();
+        } else {
+            this.showLoginForm();
+        }
+    }
+
+    authenticate() {
+        const passwordInput = document.getElementById('passwordInput');
+        const loginBtn = document.getElementById('loginBtn');
+        
+        if (!passwordInput || !loginBtn) {
+            this.showError('Erro: Elementos de login não encontrados');
+            return;
+        }
+
+        const password = passwordInput.value.trim();
+        
+        if (!password) {
+            this.showError('Por favor, digite a senha');
+            passwordInput.focus();
+            return;
+        }
+
+        // Desabilitar botão durante autenticação
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+        
+        // Simular delay de autenticação para melhor UX
+        setTimeout(() => {
+            if (password === this.adminPassword) {
+                this.isAuthenticated = true;
+                sessionStorage.setItem('telecimento_admin_auth', 'true');
+                this.showSuccess('Login realizado com sucesso!');
+                
+                setTimeout(() => {
+                    this.showAdminPanel();
+                    this.loadData();
+                }, 1000);
+            } else {
+                this.showError('Senha incorreta! Tente novamente.');
+                
+                // Adicionar efeito de shake no formulário
+                const loginForm = document.querySelector('.login-form');
+                if (loginForm) {
+                    loginForm.style.animation = 'shake 0.5s';
+                    setTimeout(() => {
+                        loginForm.style.animation = '';
+                    }, 500);
+                }
+                
+                // Limpar campo e focar
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+            
+            // Restaurar botão
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar';
+        }, 800);
+    }
+
+    showLoginForm() {
+        document.getElementById('loginForm').style.display = 'flex';
+        document.getElementById('adminPanel').style.display = 'none';
+    }
+
+    showAdminPanel() {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+    }
+
+    async loadData() {
+        try {
+            this.showLoading(true);
+            
+            let evaluations = [];
+            
+            // Tentar carregar do backend primeiro
+            try {
+                const response = await fetch(`${this.apiUrl}/evaluations`);
+                if (response.ok) {
+                    const backendData = await response.json();
+                    evaluations = backendData.evaluations || [];
+                    console.log('Dados carregados do backend');
+                }
+            } catch (error) {
+                console.log('Backend não disponível, usando localStorage');
+            }
+            
+            // Carregar dados do localStorage como fallback
+            const localEvaluations = JSON.parse(localStorage.getItem('telecimento_evaluations') || '[]');
+            
+            // Combinar dados (remover duplicatas por ID)
+            const allEvaluations = [...evaluations];
+            localEvaluations.forEach(localEval => {
+                if (!allEvaluations.find(eval => eval.id === localEval.id)) {
+                    allEvaluations.push(localEval);
+                }
+            });
+            
+            this.dados = {
+                avaliacoes: allEvaluations,
+                estatisticas: this.calculateStatistics(allEvaluations)
+            };
+            
+            this.updateDashboard();
+            this.updateOpinions();
+            this.updateTimer();
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+            this.showError('Erro ao carregar dados');
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    calculateStatistics(evaluations) {
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        const avaliacoesHoje = evaluations.filter(a => 
+            a.timestamp && new Date(a.timestamp) >= hoje
+        );
+
+        const totalVotos = evaluations.length;
+        const votosHoje = avaliacoesHoje.length;
+
+        // Calcular média geral
+        const valores = { 'Ruim': 1, 'Regular': 2, 'Bom': 3, 'Excelente': 4 };
+        const somaAvaliacoes = evaluations.reduce((soma, a) => soma + (valores[a.avaliacaoGeral] || 0), 0);
+        const mediaGeral = totalVotos > 0 ? (somaAvaliacoes / totalVotos).toFixed(1) : 0;
+
+        // Taxa de satisfação (Bom + Excelente)
+        const satisfeitos = evaluations.filter(a => ['Bom', 'Excelente'].includes(a.avaliacaoGeral)).length;
+        const taxaSatisfacao = totalVotos > 0 ? Math.round((satisfeitos / totalVotos) * 100) : 0;
+
+        // Feedbacks
+        const feedbacks = evaluations.filter(a => a.feedback && a.feedback.trim() !== '').length;
+
+        // Estatísticas por setor
+        const setores = ['Vendas', 'Caixa', 'Expedição', 'Logística'];
+        const estatisticasSetores = {};
+
+        setores.forEach(setor => {
+            const avaliacoesSetor = evaluations.filter(a => a.setores && a.setores[setor]);
+            const totalSetor = avaliacoesSetor.length;
+            
+            if (totalSetor > 0) {
+                const somaSetor = avaliacoesSetor.reduce((soma, a) => soma + (valores[a.setores[setor]] || 0), 0);
+                const mediaSetor = (somaSetor / totalSetor).toFixed(1);
+                const satisfeitosSetor = avaliacoesSetor.filter(a => ['Bom', 'Excelente'].includes(a.setores[setor])).length;
+                const taxaSetor = Math.round((satisfeitosSetor / totalSetor) * 100);
+
+                estatisticasSetores[setor] = {
+                    total: totalSetor,
+                    media: parseFloat(mediaSetor),
+                    satisfacao: taxaSetor
+                };
+            } else {
+                estatisticasSetores[setor] = {
+                    total: 0,
+                    media: 0,
+                    satisfacao: 0
+                };
+            }
+        });
+
+        return {
+            totalVotos,
+            votosHoje,
+            mediaGeral: parseFloat(mediaGeral),
+            taxaSatisfacao,
+            feedbacks,
+            setores: estatisticasSetores
+        };
+    }
+
+    async resetTimer() {
+        if (!confirm('Tem certeza que deseja resetar o timer de votação? Todos os dispositivos poderão votar novamente.')) {
+            return;
+        }
+
+        try {
+            // Tentar resetar no backend primeiro
+            try {
+                const response = await fetch(`${this.apiUrl}/reset-timer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    console.log('Timer resetado no backend');
+                }
+            } catch (error) {
+                console.log('Backend não disponível para reset');
+            }
+
+            // Remover registros locais
+            localStorage.removeItem('telecimento_last_vote');
+            
+            // Atualizar timestamp de reset
+            localStorage.setItem('telecimento_last_reset', new Date().toISOString());
+            
+            this.showSuccess('Timer resetado com sucesso! Todos os dispositivos podem votar novamente.');
+            this.updateTimer();
+        } catch (error) {
+            console.error('Erro ao resetar timer:', error);
+            this.showError('Erro ao resetar timer');
+        }
+    }
+
+    updateDashboard() {
+        if (!this.dados) return;
+
+        const stats = this.dados.estatisticas;
+
+        // Estatísticas principais com animação
+        this.animateValue('totalVotes', 0, stats.totalVotos, 1000);
+        this.animateValue('todayVotes', 0, stats.votosHoje, 1000);
+        this.animateValue('averageRating', 0, stats.mediaGeral, 1000, 1);
+        this.animateValue('satisfactionRate', 0, stats.taxaSatisfacao, 1000, 0, '%');
+        this.animateValue('feedbackCount', 0, stats.feedbacks, 1000);
+
+        // Estatísticas por setor
+        this.updateSectorStats(stats.setores);
+
+        // Resumo geral
+        this.updateGeneralSummary(stats);
+    }
+
+    animateValue(elementId, start, end, duration, decimals = 0, suffix = '') {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        const range = end - start;
+        const increment = range / (duration / 16);
+        let current = start;
+
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= end) {
+                current = end;
+                clearInterval(timer);
+            }
+            
+            const value = decimals > 0 ? current.toFixed(decimals) : Math.floor(current);
+            element.textContent = value + suffix;
+        }, 16);
+    }
+
+    updateSectorStats(setores) {
+        const sectorNames = ['Vendas', 'Caixa', 'Expedição', 'Logística'];
+        
+        sectorNames.forEach(setor => {
+            const sectorData = setores[setor] || { total: 0, media: 0, satisfacao: 0 };
+            
+            const sectorElement = document.querySelector(`[data-sector="${setor.toLowerCase()}"]`);
+            if (sectorElement) {
+                // Animar valores dos setores
+                setTimeout(() => {
+                    this.animateValue(sectorElement.querySelector('.sector-average'), 0, sectorData.media, 800, 1);
+                    this.animateValue(sectorElement.querySelector('.sector-total'), 0, sectorData.total, 800);
+                    this.animateValue(sectorElement.querySelector('.sector-satisfaction'), 0, sectorData.satisfacao, 800, 0, '%');
+                }, Math.random() * 500);
+            }
+        });
+    }
+
+    animateValue(element, start, end, duration, decimals = 0, suffix = '') {
+        if (!element) return;
+
+        const range = end - start;
+        const increment = range / (duration / 16);
+        let current = start;
+
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= end) {
+                current = end;
+                clearInterval(timer);
+            }
+            
+            const value = decimals > 0 ? current.toFixed(decimals) : Math.floor(current);
+            element.textContent = value + suffix;
+        }, 16);
+    }
+
+    updateGeneralSummary(stats) {
+        const positiveRate = stats.taxaSatisfacao;
+        const negativeRate = 100 - positiveRate;
+
+        this.animateValue('positiveRate', 0, positiveRate, 1000, 0, '%');
+        this.animateValue('negativeRate', 0, negativeRate, 1000, 0, '%');
+
+        // Melhor e pior setor
+        const setores = stats.setores;
+        let melhorSetor = 'N/A';
+        let piorSetor = 'N/A';
+        let maiorMedia = 0;
+        let menorMedia = 5;
+
+        Object.keys(setores).forEach(setor => {
+            const media = setores[setor].media;
+            if (media > maiorMedia && setores[setor].total > 0) {
+                maiorMedia = media;
+                melhorSetor = setor;
+            }
+            if (media < menorMedia && setores[setor].total > 0) {
+                menorMedia = media;
+                piorSetor = setor;
+            }
+        });
+
+        document.getElementById('bestSector').textContent = melhorSetor;
+        document.getElementById('worstSector').textContent = piorSetor;
+    }
+
+    updateOpinions() {
+        if (!this.dados || !this.dados.avaliacoes) return;
+
+        const opinionsContainer = document.getElementById('opinionsContainer');
+        opinionsContainer.innerHTML = '';
+
+        // Classificar opiniões por data (mais recentes primeiro)
+        const avaliacoes = this.dados.avaliacoes
+            .filter(a => a.feedback && a.feedback.trim() !== '')
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        if (avaliacoes.length === 0) {
+            opinionsContainer.innerHTML = '<p style="text-align: center; color: #888; padding: 2rem;">Nenhuma opinião registrada ainda.</p>';
+            return;
+        }
+
+        // Adicionar opiniões com animação
+        avaliacoes.forEach((avaliacao, index) => {
+            setTimeout(() => {
+                const opinionCard = this.createOpinionCard(avaliacao);
+                opinionCard.style.opacity = '0';
+                opinionCard.style.transform = 'translateY(20px)';
+                opinionsContainer.appendChild(opinionCard);
+                
+                // Animar entrada
+                setTimeout(() => {
+                    opinionCard.style.transition = 'all 0.3s ease';
+                    opinionCard.style.opacity = '1';
+                    opinionCard.style.transform = 'translateY(0)';
+                }, 50);
+            }, index * 100);
+        });
+
+        // Atualizar contadores dos filtros
+        this.updateFilterCounts(avaliacoes);
+    }
+
+    createOpinionCard(avaliacao) {
+        const card = document.createElement('div');
+        card.className = 'opinion-card';
+        
+        const sentiment = this.analyzeSentiment(avaliacao.feedback);
+        const timestamp = new Date(avaliacao.timestamp).toLocaleString('pt-BR');
+        
+        // Criar lista de setores avaliados
+        const setoresHtml = Object.keys(avaliacao.setores || {})
+            .map(setor => `<span class="sector-tag">${this.getSectorIcon(setor)} ${setor}: ${avaliacao.setores[setor]}</span>`)
+            .join('');
+
+        card.innerHTML = `
+            <div class="opinion-header">
+                <span class="opinion-rating ${avaliacao.avaliacaoGeral.toLowerCase()}">${this.getRatingEmoji(avaliacao.avaliacaoGeral)} ${avaliacao.avaliacaoGeral}</span>
+                <span class="opinion-sentiment ${sentiment.toLowerCase()}">${sentiment}</span>
+                <span class="opinion-date">${timestamp}</span>
+            </div>
+            <div class="opinion-content">
+                "${avaliacao.feedback}"
+            </div>
+            <div class="opinion-sectors">
+                ${setoresHtml}
+            </div>
+        `;
+
+        card.dataset.sentiment = sentiment.toLowerCase();
+        card.dataset.rating = avaliacao.avaliacaoGeral.toLowerCase();
+
+        return card;
+    }
+
+    getSectorIcon(setor) {
+        const icons = {
+            'Vendas': '🛒',
+            'Caixa': '💰',
+            'Expedição': '📦',
+            'Logística': '🚛'
+        };
+        return icons[setor] || '📋';
+    }
+
+    getRatingEmoji(rating) {
+        const emojis = {
+            'Ruim': '😞',
+            'Regular': '😐',
+            'Bom': '😊',
+            'Excelente': '🤩'
+        };
+        return emojis[rating] || '😐';
+    }
+
+    analyzeSentiment(text) {
+        const positiveWords = ['bom', 'ótimo', 'excelente', 'maravilhoso', 'perfeito', 'satisfeito', 'recomendo', 'gostei'];
+        const negativeWords = ['ruim', 'péssimo', 'horrível', 'insatisfeito', 'problema', 'demora', 'não gostei'];
+        
+        const lowerText = text.toLowerCase();
+        const positiveCount = positiveWords.filter(word => lowerText.includes(word)).length;
+        const negativeCount = negativeWords.filter(word => lowerText.includes(word)).length;
+        
+        if (positiveCount > negativeCount) return 'Positivo';
+        if (negativeCount > positiveCount) return 'Negativo';
+        return 'Neutro';
+    }
+
+    updateFilterCounts(avaliacoes) {
+        const counts = {
+            todas: avaliacoes.length,
+            positivas: avaliacoes.filter(a => this.analyzeSentiment(a.feedback) === 'Positivo').length,
+            negativas: avaliacoes.filter(a => this.analyzeSentiment(a.feedback) === 'Negativo').length,
+            sugestoes: avaliacoes.filter(a => a.feedback.toLowerCase().includes('sugest')).length
+        };
+
+        Object.keys(counts).forEach(filter => {
+            const btn = document.querySelector(`[data-filter="${filter}"]`);
+            if (btn) {
+                const baseText = btn.textContent.split(' ')[0];
+                btn.textContent = `${baseText} ${counts[filter]}`;
+            }
+        });
+    }
+
+    filterOpinions(filter) {
+        // Atualizar botões ativos
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+
+        // Filtrar opiniões com animação
+        const opinions = document.querySelectorAll('.opinion-card');
+        
+        opinions.forEach((opinion, index) => {
+            let show = true;
+            
+            switch(filter) {
+                case 'positivas':
+                    show = opinion.dataset.sentiment === 'positivo';
+                    break;
+                case 'negativas':
+                    show = opinion.dataset.sentiment === 'negativo';
+                    break;
+                case 'sugestoes':
+                    show = opinion.textContent.toLowerCase().includes('sugest');
+                    break;
+                case 'todas':
+                default:
+                    show = true;
+            }
+            
+            // Animar saída/entrada
+            setTimeout(() => {
+                if (show) {
+                    opinion.style.display = 'block';
+                    opinion.style.opacity = '0';
+                    opinion.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        opinion.style.transition = 'all 0.3s ease';
+                        opinion.style.opacity = '1';
+                        opinion.style.transform = 'translateY(0)';
+                    }, 50);
+                } else {
+                    opinion.style.transition = 'all 0.3s ease';
+                    opinion.style.opacity = '0';
+                    opinion.style.transform = 'translateY(-20px)';
+                    setTimeout(() => {
+                        opinion.style.display = 'none';
+                    }, 300);
+                }
+            }, index * 50);
+        });
+    }
+
+    updateTimer() {
+        const agora = this.getBrazilTime();
+        const proximoReset = new Date(agora);
+        proximoReset.setDate(proximoReset.getDate() + 1);
+        proximoReset.setHours(0, 0, 0, 0);
+
+        const updateCountdown = () => {
+            const now = this.getBrazilTime();
+            const reset = new Date(now);
+            reset.setDate(reset.getDate() + 1);
+            reset.setHours(0, 0, 0, 0);
+            
+            const diferenca = reset.getTime() - now.getTime();
+
+            if (diferenca <= 0) {
+                document.getElementById('nextReset').textContent = '00:00:00 (Horário de Brasília)';
+                return;
+            }
+
+            const horas = Math.floor(diferenca / (1000 * 60 * 60));
+            const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
+            const segundos = Math.floor((diferenca % (1000 * 60)) / 1000);
+
+            const timeString = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')} (Horário de Brasília)`;
+            document.getElementById('nextReset').textContent = timeString;
+        };
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    }
+
+    getBrazilTime() {
+        const utc = new Date().getTime() + (new Date().getTimezoneOffset() * 60000);
+        const brazilTime = new Date(utc + (-3 * 3600000)); // UTC-3 para Brasília
+        return brazilTime;
+    }
+
+    showLoading(show) {
+        const refreshBtn = document.getElementById('refreshBtn');
+        const progressContainer = document.getElementById('progressBarContainer');
+        const progressBar = document.getElementById('progressBar');
+        
+        if (show) {
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Carregando...';
+            refreshBtn.disabled = true;
+            
+            // Mostrar barra de progresso
+            if (progressContainer && progressBar) {
+                progressContainer.style.display = 'block';
+                progressBar.classList.add('loading');
+                progressBar.style.width = '70%';
+            }
+        } else {
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar Dados';
+            refreshBtn.disabled = false;
+            
+            // Esconder barra de progresso
+            if (progressContainer && progressBar) {
+                progressBar.style.width = '100%';
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                    progressBar.classList.remove('loading');
+                }, 500);
+            }
+        }
+    }
+
+    showError(message) {
+        this.showNotification(message, 'error');
+    }
+
+    showSuccess(message) {
+        this.showNotification(message, 'success');
+    }
+
+    showNotification(message, type) {
+        // Remover notificação existente
+        const existingNotification = document.querySelector('.notification');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+
+        // Criar nova notificação
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+            <span>${message}</span>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Remover após 5 segundos
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+}
+
+// Adicionar CSS para animação de shake
+const shakeCSS = `
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+`;
+
+const style = document.createElement('style');
+style.textContent = shakeCSS;
+document.head.appendChild(style);
+
+// Inicializar quando a página carregar
+document.addEventListener('DOMContentLoaded', () => {
+    new AdminPanelAdvanced();
+});
+</script>
+</body>
+</html>
+
+
